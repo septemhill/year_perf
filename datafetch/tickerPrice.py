@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 # List of tickers to fetch
-TICKERS = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA", "NFLX", "TSM", "AVGO"]
+TICKERS = ["VOO", "QQQ", "IWM", "SCHG", "VGT", "SMH"]
 
 def get_ticker_price_history(ticker_symbol: str, years: int = 10):
     """
@@ -48,23 +48,63 @@ def calculate_yearly_performance(data: pd.DataFrame):
     
     return data
 
+def get_worst_months(data: pd.DataFrame):
+    """
+    Identifies the top 3 worst-performing months for each year.
+    """
+    if data is None or data.empty:
+        return {}
+    
+    # Resample to monthly and get the last price of each month
+    # We use 'ME' for Month End (pandas >= 2.2.0) or 'M'
+    try:
+        monthly_prices = data['Close'].resample('ME').last()
+    except ValueError:
+        monthly_prices = data['Close'].resample('M').last()
+        
+    # Calculate monthly percentage change
+    # Note: The first month will have NaN return as there's no previous month
+    monthly_returns = monthly_prices.pct_change() * 100
+    
+    worst_months_by_year = {}
+    
+    for year, group in monthly_returns.groupby(monthly_returns.index.year):
+        # Drop NaN values (like the first month of the whole dataset)
+        group = group.dropna()
+        if group.empty:
+            continue
+            
+        # Get the bottom 3 months
+        bottom_3 = group.sort_values().head(3)
+        
+        worst_months_by_year[int(year)] = [
+            {"month": int(date.month), "return": round(float(ret), 2)}
+            for date, ret in bottom_3.items()
+        ]
+        
+    return worst_months_by_year
+
 def get_all_tickers_perf(tickers: list):
     """
-    Fetches and aggregates YearlyPerf data for a list of tickers.
+    Fetches and aggregates YearlyPerf data and Worst Months for a list of tickers.
     Returns a dictionary with tickers as keys.
     """
-    all_perf = {}
+    all_data = {}
     for symbol in tickers:
         print(f"Fetching and processing: {symbol}")
         data = get_ticker_price_history(symbol)
         if data is not None:
+            worst_months = get_worst_months(data)
             data = calculate_yearly_performance(data)
             # Format the index to YYYY-MM-dd strings
             data.index = data.index.strftime('%Y-%m-%d')
-            # Only store the YearlyPerf column as a dictionary
-            all_perf[symbol] = data['YearlyPerf'].to_dict()
+            
+            all_data[symbol] = {
+                "history": data['YearlyPerf'].to_dict(),
+                "worst_months": worst_months
+            }
     
-    return all_perf
+    return all_data
 
 if __name__ == "__main__":
     import json

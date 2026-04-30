@@ -90,7 +90,7 @@ const MultiLineChart: React.FC<MultiLineChartProps> = ({
           <Tooltip
             labelFormatter={(label) => {
               try {
-                return format(parseISO(label), 'yyyy/MM/dd');
+                return format(parseISO(label), 'MM/dd');
               } catch (e) {
                 return label;
               }

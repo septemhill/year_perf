@@ -1,15 +1,17 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useDeferredValue } from 'react';
 import Ticker from './components/Ticker';
 
 interface RawData {
   [ticker: string]: {
-    [date: string]: number;
+    history: { [date: string]: number };
+    worst_months: { [year: string]: { month: number; return: number }[] };
   };
 }
 
 function App() {
   const [data, setData] = useState<RawData | null>(null);
   const [maxLines, setMaxLines] = useState(5);
+  const deferredMaxLines = useDeferredValue(maxLines);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +34,7 @@ function App() {
 
   const processedTickers = useMemo(() => {
     if (!data) return [];
-    return Object.entries(data).map(([ticker, history]) => {
+    return Object.entries(data).map(([ticker, { history, worst_months }]) => {
       const years = new Set<string>();
       const dateMap = new Map<string, any>();
 
@@ -58,7 +60,8 @@ function App() {
       return {
         ticker,
         data: sortedData,
-        config
+        config,
+        worstMonths: worst_months
       };
     });
   }, [data]);
@@ -111,16 +114,20 @@ function App() {
               }}>
                 {maxLines} years
               </span>
+              {maxLines !== deferredMaxLines && (
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>Updating charts...</span>
+              )}
             </div>
 
-            {processedTickers.map(({ ticker, data, config }) => (
+            {processedTickers.map(({ ticker, data, config, worstMonths }) => (
               <Ticker 
                 key={ticker}
                 title={ticker}
                 data={data} 
                 config={config} 
-                maxLines={maxLines}
+                maxLines={deferredMaxLines}
                 height={450}
+                worstMonths={worstMonths}
               />
             ))}
           </>
