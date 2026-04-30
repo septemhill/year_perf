@@ -4,7 +4,14 @@ import Ticker from './components/Ticker';
 interface RawData {
   [ticker: string]: {
     history: { [date: string]: number };
-    worst_months: { [year: string]: { month: number; return: number }[] };
+    worst_months: { 
+      [year: string]: { 
+        month: number; 
+        geo_mean: number;
+        monthly_return: number;
+        mdd: number;
+      }[] 
+    };
   };
 }
 

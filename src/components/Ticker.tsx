@@ -27,12 +27,6 @@ const Ticker: React.FC<TickerProps> = React.memo(({ title, worstMonths, ...chart
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
-  const metricLabels: Record<MetricType, string> = {
-    geo_mean: 'Geometric Avg',
-    monthly_return: 'Monthly Return',
-    mdd: 'Max Drawdown'
-  };
-
   return (
     <div style={{
       border: '1px solid #e2e8f0',
