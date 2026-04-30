@@ -1,5 +1,6 @@
 import yfinance as yf
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 
 # List of tickers to fetch
@@ -50,36 +51,69 @@ def calculate_yearly_performance(data: pd.DataFrame):
 
 def get_worst_months(data: pd.DataFrame):
     """
-    Identifies the top 3 worst-performing months for each year.
+    Identifies the top 3 worst-performing months for each year based on geometric mean.
+    Also calculates Monthly Total Return and Maximum Drawdown (MDD) for these months.
     """
     if data is None or data.empty:
         return {}
     
-    # Resample to monthly and get the last price of each month
-    # We use 'ME' for Month End (pandas >= 2.2.0) or 'M'
-    try:
-        monthly_prices = data['Close'].resample('ME').last()
-    except ValueError:
-        monthly_prices = data['Close'].resample('M').last()
+    # Ensure index is datetime
+    df = data.copy()
+    df.index = pd.to_datetime(df.index)
+    df['Year'] = df.index.year
+    df['Month'] = df.index.month
+    
+    # Get previous closing prices for Monthly Return calculation
+    # We'll use the price before each group if available
+    full_prices = df['Close']
+    
+    monthly_stats = []
+    
+    # Group by Year and Month
+    for (year, month), group in df.groupby(['Year', 'Month']):
+        prices = group['Close']
+        if prices.empty:
+            continue
+            
+        # 1. Geometric Mean (as previously defined for ranking)
+        first_price = prices.iloc[0]
+        ratios = prices / first_price
+        geo_mean_ratio = np.exp(np.log(ratios).mean())
+        geo_mean_perf = (geo_mean_ratio - 1) * 100
         
-    # Calculate monthly percentage change
-    # Note: The first month will have NaN return as there's no previous month
-    monthly_returns = monthly_prices.pct_change() * 100
+        # 2. Monthly Total Return: (P_end - P_start) / P_start
+        # Using the actual first price of the month as P_start
+        monthly_return = (prices.iloc[-1] / first_price - 1) * 100
+        
+        # 3. Maximum Drawdown (MDD) within the month
+        peak = prices.cummax()
+        drawdown = (prices / peak - 1) * 100
+        mdd = drawdown.min()
+        
+        monthly_stats.append({
+            'year': year,
+            'month': month,
+            'geo_mean': geo_mean_perf,
+            'monthly_return': monthly_return,
+            'mdd': mdd
+        })
+    
+    monthly_df = pd.DataFrame(monthly_stats)
     
     worst_months_by_year = {}
     
-    for year, group in monthly_returns.groupby(monthly_returns.index.year):
-        # Drop NaN values (like the first month of the whole dataset)
-        group = group.dropna()
-        if group.empty:
-            continue
-            
-        # Get the bottom 3 months
-        bottom_3 = group.sort_values().head(3)
+    for year, group in monthly_df.groupby('year'):
+        # Ranking still based on geometric mean performance
+        bottom_3 = group.sort_values(by='geo_mean').head(3)
         
         worst_months_by_year[int(year)] = [
-            {"month": int(date.month), "return": round(float(ret), 2)}
-            for date, ret in bottom_3.items()
+            {
+                "month": int(row['month']), 
+                "geo_mean": round(float(row['geo_mean']), 2),
+                "monthly_return": round(float(row['monthly_return']), 2),
+                "mdd": round(float(row['mdd']), 2)
+            }
+            for _, row in bottom_3.iterrows()
         ]
         
     return worst_months_by_year

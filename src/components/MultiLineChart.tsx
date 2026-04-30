@@ -95,7 +95,7 @@ const MultiLineChart: React.FC<MultiLineChartProps> = ({
                 return label;
               }
             }}
-            formatter={(value: number) => [`${value}%`]}
+            formatter={(value: number, name: string) => [`${value.toFixed(2)}%`, name]}
             contentStyle={{
               borderRadius: '8px',
               border: 'none',
