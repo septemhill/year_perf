@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime, timedelta
 
 # List of tickers to fetch
-TICKERS = ["VOO", "QQQ", "IWM", "SCHG", "VGT", "SMH"]
+TICKERS = ["VOO", "QQQ", "IWM", "MAGS", "SCHG", "VGT", "SMH"]
 
 def get_ticker_price_history(ticker_symbol: str, years: int = 10):
     """
