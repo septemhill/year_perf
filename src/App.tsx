@@ -14,7 +14,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/data/all_tickers_10y.json')
+    fetch(`${import.meta.env.BASE_URL}data/all_tickers_10y.json`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to load ticker data');
         return res.json();
