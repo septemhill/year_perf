@@ -34,7 +34,10 @@ function App() {
 
   const processedTickers = useMemo(() => {
     if (!data) return [];
-    return Object.entries(data).map(([ticker, { history, worst_months }]) => {
+    return Object.entries(data).map(([ticker, entry]) => {
+      const { history, worst_months } = entry || {};
+      if (!history) return null;
+
       const years = new Set<string>();
       const dateMap = new Map<string, any>();
 
@@ -46,7 +49,7 @@ function App() {
         if (!dateMap.has(monthDay)) {
           dateMap.set(monthDay, { date: `2024-${monthDay}` });
         }
-        dateMap.get(monthDay)![year] = parseFloat(value.toFixed(2));
+        dateMap.get(monthDay)![year] = parseFloat((value as number).toFixed(2));
       });
 
       const sortedData = Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
@@ -63,7 +66,7 @@ function App() {
         config,
         worstMonths: worst_months
       };
-    });
+    }).filter(t => t !== null);
   }, [data]);
 
   // Determine global max years available across all tickers for the slider
