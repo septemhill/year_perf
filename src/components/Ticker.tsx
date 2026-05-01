@@ -10,12 +10,13 @@ interface WorstMonthData {
 
 interface TickerProps extends MultiLineChartProps {
   title: string;
+  description?: string;
   worstMonths?: { [year: string]: WorstMonthData[] };
 }
 
 type MetricType = 'geo_mean' | 'monthly_return' | 'mdd';
 
-const Ticker: React.FC<TickerProps> = React.memo(({ title, worstMonths, ...chartProps }) => {
+const Ticker: React.FC<TickerProps> = React.memo(({ title, description, worstMonths, ...chartProps }) => {
   const { config, maxLines } = chartProps;
   const [metric, setMetric] = useState<MetricType>('monthly_return');
   
@@ -54,7 +55,7 @@ const Ticker: React.FC<TickerProps> = React.memo(({ title, worstMonths, ...chart
           }}>
             {title}
           </h2>
-          <span style={{ color: '#64748b', fontSize: '0.875rem' }}>Trend Analysis</span>
+          <span style={{ color: '#64748b', fontSize: '0.875rem' }}>{description}</span>
         </div>
       </div>
       

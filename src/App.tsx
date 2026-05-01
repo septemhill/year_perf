@@ -3,6 +3,7 @@ import Ticker from './components/Ticker';
 
 interface RawData {
   [ticker: string]: {
+    description: string;
     history: { [date: string]: number };
     worst_months: { 
       [year: string]: { 
@@ -108,6 +109,7 @@ function App() {
 
       return {
         ticker,
+        description: entry.description,
         data: sortedData,
         config,
         worstMonths: worst_months
@@ -168,10 +170,11 @@ function App() {
               )}
             </div>
 
-            {processedTickers.map(({ ticker, data, config, worstMonths }) => (
+            {processedTickers.map(({ ticker, description, data, config, worstMonths }) => (
               <Ticker 
                 key={ticker}
                 title={ticker}
+                description={description}
                 data={data} 
                 config={config} 
                 maxLines={deferredMaxLines}

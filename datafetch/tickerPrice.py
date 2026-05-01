@@ -6,6 +6,25 @@ from datetime import datetime, timedelta
 # List of tickers to fetch
 TICKERS = ["VOO", "QQQ", "IWM", "MAGS", "SCHG", "VGT", "SMH"]
 
+TICKER_DESCRIPTIONS = {
+    "VOO": "Vanguard S&P 500 ETF",
+    "VTI": "Vanguard Total Stock Market ETF",
+    "VXUS": "Vanguard Total International Stock ETF",
+    "BND": "Vanguard Total Bond Market ETF",
+    "QQQ": "Invesco QQQ Trust (Nasdaq 100)",
+    "VGT": "Vanguard Information Technology ETF",
+    "VT": "Vanguard Total World Stock ETF",
+    "VNQ": "Vanguard Real Estate ETF",
+    "VWO": "Vanguard FTSE Emerging Markets ETF",
+    "VEA": "Vanguard FTSE Developed Markets ETF",
+    "GLD": "SPDR Gold Shares",
+    "TLT": "iShares 20+ Year Treasury Bond ETF",
+    "SMH": "VanEck Semiconductor ETF",
+    "MAGS": "Roundhill Magnificent Seven ETF",
+    "IWM": "iShares Russell 2000 ETF",
+    "SCHG": "Schwab U.S. Large-Cap Growth ETF",
+}
+
 def get_ticker_price_history(ticker_symbol: str, years: int = 10):
     """
     Fetches the closing price history for a given ticker for the specified number of years.
@@ -118,6 +137,7 @@ def get_worst_months(data: pd.DataFrame):
         
     return worst_months_by_year
 
+
 def get_all_tickers_perf(tickers: list):
     """
     Fetches and aggregates YearlyPerf data and Worst Months for a list of tickers.
@@ -134,6 +154,7 @@ def get_all_tickers_perf(tickers: list):
             data.index = data.index.strftime('%Y-%m-%d')
             
             all_data[symbol] = {
+                "description": TICKER_DESCRIPTIONS.get(symbol, ""),
                 "history": data['YearlyPerf'].to_dict(),
                 "worst_months": worst_months
             }
