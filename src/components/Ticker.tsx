@@ -17,7 +17,7 @@ interface TickerProps extends MultiLineChartProps {
 type MetricType = 'geo_mean' | 'monthly_return' | 'mdd';
 
 const Ticker: React.FC<TickerProps> = React.memo(({ title, description, worstMonths, ...chartProps }) => {
-  const { config, maxLines } = chartProps;
+  const { data, config, maxLines } = chartProps;
   const [metric, setMetric] = useState<MetricType>('monthly_return');
   
   // Get the years currently being displayed
@@ -27,6 +27,42 @@ const Ticker: React.FC<TickerProps> = React.memo(({ title, description, worstMon
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
+
+  const annualStats = React.useMemo(() => {
+    const stats: { [year: string]: { return: number; mdd: number } } = {};
+    
+    visibleYears.forEach(year => {
+      let peak = -Infinity;
+      let maxDD = 0;
+      let lastVal = 0;
+      let hasData = false;
+
+      data.forEach(d => {
+        const val = d[year];
+        if (val !== undefined && val !== null) {
+          hasData = true;
+          lastVal = val;
+          const ratio = val / 100 + 1;
+          if (ratio > peak) {
+            peak = ratio;
+          }
+          const dd = (peak - ratio) / peak;
+          if (dd > maxDD) {
+            maxDD = dd;
+          }
+        }
+      });
+
+      if (hasData) {
+        stats[year] = {
+          return: lastVal,
+          mdd: maxDD * 100
+        };
+      }
+    });
+    
+    return stats;
+  }, [data, visibleYears]);
 
   return (
     <div style={{
@@ -60,6 +96,37 @@ const Ticker: React.FC<TickerProps> = React.memo(({ title, description, worstMon
       </div>
       
       <MultiLineChart {...chartProps} />
+
+      <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#475569', marginBottom: '12px' }}>
+          Annual Performance Summary
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+          {visibleYears.map(year => {
+            const stats = annualStats[year];
+            if (!stats) return null;
+            return (
+              <div key={year} style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                <div style={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' }}>
+                  {year}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '4px' }}>
+                  <span style={{ color: '#64748b' }}>Total Return</span>
+                  <span style={{ color: stats.return >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+                    {stats.return > 0 ? '+' : ''}{stats.return.toFixed(2)}%
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                  <span style={{ color: '#64748b' }}>Max Drawdown</span>
+                  <span style={{ color: '#ef4444', fontWeight: 500 }}>
+                    -{stats.mdd.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {worstMonths && (
         <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
