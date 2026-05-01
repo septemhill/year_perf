@@ -15,6 +15,45 @@ interface RawData {
   };
 }
 
+function Footer() {
+  return (
+    <div style={{ 
+      marginTop: '48px', 
+      paddingTop: '24px', 
+      borderTop: '1px solid #e2e8f0',
+      color: '#64748b',
+      fontSize: '0.875rem',
+      lineHeight: '1.6'
+    }}>
+      <h3 style={{ color: '#334155', fontSize: '1rem', marginBottom: '12px' }}>Footnotes: Calculation Methods for Worst Months</h3>
+      <ul style={{ paddingLeft: '20px', margin: 0 }}>
+        <li style={{ marginBottom: '16px' }}>
+          <strong>Monthly Return</strong>: Calculates the cumulative return from the beginning to the end of the month.
+          <br />
+          <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>
+            Formula: (Price_end / Price_start) - 1
+          </code>
+        </li>
+        <li style={{ marginBottom: '16px' }}>
+          <strong>Geometric Mean</strong>: Reflects the average price level relative to the start of the month, accounting for the geometric average of cumulative performance.
+          <br />
+          <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>
+            Formula: [Product(Price_i / Price_start)^(1/n)] - 1
+          </code>
+          <span style={{ marginLeft: '8px', fontSize: '0.75rem' }}>(n = number of trading days)</span>
+        </li>
+        <li>
+          <strong>Maximum Drawdown (MDD)</strong>: The largest peak-to-trough decline observed within the month.
+          <br />
+          <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>
+            Formula: Min((Price_i / Peak_to_i) - 1)
+          </code>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
 function App() {
   const [data, setData] = useState<RawData | null>(null);
   const [maxLines, setMaxLines] = useState(5);
@@ -140,6 +179,7 @@ function App() {
                 worstMonths={worstMonths}
               />
             ))}
+            <Footer />
           </>
         )}
       </div>
